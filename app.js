@@ -33,12 +33,14 @@ import {
 // ===============================
 
 const app = initializeApp(firebaseConfig);
-
 const auth = getAuth(app);
-
 const db = getFirestore(app);
 
 const googleProvider = new GoogleAuthProvider();
+
+googleProvider.setCustomParameters({
+  prompt: "select_account"
+});
 
 
 // ===============================
@@ -52,114 +54,10 @@ let cart = [];
 
 
 // ===============================
-// Helpers
-// ===============================
-
-function $(selector) {
-  return document.querySelector(selector);
-}
-
-function $all(selector) {
-  return Array.from(document.querySelectorAll(selector));
-}
-
-function money(value) {
-  return `${Number(value || 0).toFixed(2)} ر.س`;
-}
-
-function escapeHTML(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function showToast(message, isError = false) {
-  const toast = $("#toast");
-
-  if (!toast) {
-    return;
-  }
-
-  toast.textContent = message;
-
-  toast.className = "toast show";
-
-  if (isError) {
-    toast.classList.add("error");
-  }
-
-  clearTimeout(showToast.timer);
-
-  showToast.timer = setTimeout(function () {
-    toast.classList.remove("show");
-  }, 3500);
-}
-
-function openModal(id) {
-  const element = $(id);
-
-  if (!element) {
-    return;
-  }
-
-  element.classList.remove("hidden");
-
-  document.body.classList.add("modal-open");
-}
-
-function closeModal(id) {
-  const element = $(id);
-
-  if (!element) {
-    return;
-  }
-
-  element.classList.add("hidden");
-
-  document.body.classList.remove("modal-open");
-}
-
-function emptyState(title, description) {
-  return `
-    <div class="empty-state">
-      <div class="empty-icon">✦</div>
-      <h3>${escapeHTML(title)}</h3>
-      <p>${escapeHTML(description)}</p>
-    </div>
-  `;
-}
-
-function formatDate(timestamp) {
-  if (!timestamp) {
-    return "—";
-  }
-
-  let date;
-
-  if (
-    timestamp &&
-    typeof timestamp.toDate === "function"
-  ) {
-    date = timestamp.toDate();
-  } else {
-    date = new Date(timestamp);
-  }
-
-  return new Intl.DateTimeFormat("ar-SA", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(date);
-}
-
-
-// ===============================
 // Statuses
 // ===============================
 
-const statuses = {
+const STATUS = {
   pending: {
     label: "بانتظار التحويل",
     className: "status-pending"
@@ -193,17 +91,118 @@ const statuses = {
 
 
 // ===============================
-// Navigation
+// Helpers
 // ===============================
 
-function switchView(viewName) {
-  const target = $(`#view-${viewName}`);
+const $ = (selector) => document.querySelector(selector);
+
+const $$ = (selector) =>
+  Array.from(document.querySelectorAll(selector));
+
+
+function showToast(message, isError = false) {
+  const element = $("#toast");
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent = message;
+
+  element.className =
+    "toast show" + (isError ? " error" : "");
+
+  clearTimeout(showToast.timer);
+
+  showToast.timer = setTimeout(() => {
+    element.classList.remove("show");
+  }, 3500);
+}
+
+
+function openModal(id) {
+  const element = $(id);
+
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove("hidden");
+
+  document.body.classList.add("modal-open");
+}
+
+
+function closeModal(id) {
+  const element = $(id);
+
+  if (!element) {
+    return;
+  }
+
+  element.classList.add("hidden");
+
+  document.body.classList.remove("modal-open");
+}
+
+
+function escapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+function money(value) {
+  return Number(value || 0).toFixed(2) + " ر.س";
+}
+
+
+function formatDate(timestamp) {
+  if (!timestamp) {
+    return "—";
+  }
+
+  const date =
+    typeof timestamp.toDate === "function"
+      ? timestamp.toDate()
+      : new Date(timestamp);
+
+  return new Intl.DateTimeFormat("ar-SA", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(date);
+}
+
+
+function emptyState(title, text) {
+  return `
+    <div class="empty-state">
+      <div class="empty-icon">✦</div>
+
+      <h3>
+        ${escapeHTML(title)}
+      </h3>
+
+      <p>
+        ${escapeHTML(text)}
+      </p>
+    </div>
+  `;
+}
+
+
+function switchView(name) {
+  const target = $(`#view-${name}`);
 
   if (!target) {
     return;
   }
 
-  $all(".view").forEach(function (view) {
+  $$(".view").forEach((view) => {
     view.classList.remove("active");
   });
 
@@ -214,62 +213,61 @@ function switchView(viewName) {
     behavior: "smooth"
   });
 
-  if (viewName === "orders") {
+  if (name === "orders") {
     renderOrders();
   }
 
-  if (viewName === "profile") {
+  if (name === "profile") {
     renderProfile();
   }
 
-  if (viewName === "admin") {
+  if (name === "admin") {
     renderAdmin();
   }
 }
 
+
+// ===============================
+// Navigation
+// ===============================
+
 function updateNavigation() {
   const loggedIn = Boolean(currentUser);
 
-  const mainNav = $("#mainNav");
-  const logoutBtn = $("#logoutBtn");
-  const openAuthBtn = $("#openAuthBtn");
-  const cartBtn = $("#cartBtn");
-  const welcomeUser = $("#welcomeUser");
-  const adminNav = $("#adminNav");
+  $("#mainNav")?.classList.toggle(
+    "hidden",
+    !loggedIn
+  );
 
-  if (mainNav) {
-    mainNav.classList.toggle("hidden", !loggedIn);
-  }
+  $("#logoutBtn")?.classList.toggle(
+    "hidden",
+    !loggedIn
+  );
 
-  if (logoutBtn) {
-    logoutBtn.classList.toggle("hidden", !loggedIn);
-  }
+  $("#openAuthBtn")?.classList.toggle(
+    "hidden",
+    loggedIn
+  );
 
-  if (openAuthBtn) {
-    openAuthBtn.classList.toggle("hidden", loggedIn);
-  }
+  $("#cartBtn")?.classList.toggle(
+    "hidden",
+    !loggedIn
+  );
 
-  if (cartBtn) {
-    cartBtn.classList.toggle("hidden", !loggedIn);
-  }
+  $("#welcomeUser")?.classList.toggle(
+    "hidden",
+    !loggedIn
+  );
 
-  if (welcomeUser) {
-    welcomeUser.classList.toggle("hidden", !loggedIn);
+  $("#adminNav")?.classList.toggle(
+    "hidden",
+    profile?.role !== "admin"
+  );
 
-    if (loggedIn) {
-      welcomeUser.textContent =
-        "أهلًا " +
-        (profile?.name || currentUser.email || "");
-    } else {
-      welcomeUser.textContent = "";
-    }
-  }
-
-  if (adminNav) {
-    adminNav.classList.toggle(
-      "hidden",
-      profile?.role !== "admin"
-    );
+  if ($("#welcomeUser")) {
+    $("#welcomeUser").textContent = loggedIn
+      ? `أهلًا ${profile?.name || currentUser.email || ""}`
+      : "";
   }
 
   updateCartCount();
@@ -295,10 +293,9 @@ async function loginWithGoogle() {
       user.uid
     );
 
-    const userSnapshot =
-      await getDoc(userRef);
+    const snapshot = await getDoc(userRef);
 
-    if (!userSnapshot.exists()) {
+    if (!snapshot.exists()) {
       await setDoc(userRef, {
         name: user.displayName || "",
         email: user.email || "",
@@ -316,6 +313,8 @@ async function loginWithGoogle() {
 
     updateNavigation();
 
+    renderProfile();
+
     showToast(
       "تم تسجيل الدخول باستخدام Google"
     );
@@ -327,7 +326,7 @@ async function loginWithGoogle() {
       switchView("profile");
 
       showToast(
-        "أكمل بيانات ملفك الشخصي"
+        "أكمل اسمك وشعبتك أولًا"
       );
     }
 
@@ -340,6 +339,13 @@ async function loginWithGoogle() {
     if (
       error.code ===
       "auth/popup-closed-by-user"
+    ) {
+      return;
+    }
+
+    if (
+      error.code ===
+      "auth/cancelled-popup-request"
     ) {
       return;
     }
@@ -361,12 +367,14 @@ async function loginWithGoogle() {
       "auth/unauthorized-domain"
     ) {
       showToast(
-        "أضف نطاق الموقع في Firebase Authorized Domains.",
+        "أضف دومين الموقع إلى Authorized domains في Firebase.",
         true
       );
 
       return;
     }
+
+    console.error(error);
 
     showToast(
       "فشل تسجيل الدخول بواسطة Google.",
@@ -386,14 +394,15 @@ async function loadProfile(user) {
     return;
   }
 
-  const userRef = doc(
+  const reference = doc(
     db,
     "users",
     user.uid
   );
 
-  const snapshot =
-    await getDoc(userRef);
+  const snapshot = await getDoc(
+    reference
+  );
 
   if (snapshot.exists()) {
     profile = snapshot.data();
@@ -410,13 +419,14 @@ async function loadProfile(user) {
   };
 
   await setDoc(
-    userRef,
+    reference,
     {
       ...profile,
       createdAt: serverTimestamp()
     }
   );
 }
+
 
 function renderProfile() {
   if (!currentUser || !profile) {
@@ -438,7 +448,8 @@ function renderProfile() {
   }
 
   if ($("#profileEmail")) {
-    $("#profileEmail").textContent = email;
+    $("#profileEmail").textContent =
+      email;
   }
 
   if ($("#profileAvatar")) {
@@ -461,6 +472,7 @@ function renderProfile() {
   }
 }
 
+
 async function saveProfile(event) {
   event.preventDefault();
 
@@ -482,6 +494,7 @@ async function saveProfile(event) {
       "اكتب الاسم الكامل.",
       true
     );
+
     return;
   }
 
@@ -490,6 +503,7 @@ async function saveProfile(event) {
       "اكتب الشعبة.",
       true
     );
+
     return;
   }
 
@@ -529,14 +543,11 @@ async function saveProfile(event) {
     updateNavigation();
 
     showToast(
-      "تم حفظ بياناتك."
+      "تم حفظ الملف الشخصي."
     );
 
   } catch (error) {
-    console.error(
-      "Save Profile Error:",
-      error
-    );
+    console.error(error);
 
     showToast(
       "تعذر حفظ البيانات.",
@@ -555,7 +566,9 @@ function serviceCard(service) {
     <article class="service-card">
 
       <div class="service-icon">
-        ${escapeHTML(service.icon || "📚")}
+        ${escapeHTML(
+          service.icon || "📚"
+        )}
       </div>
 
       <div class="service-content">
@@ -563,7 +576,9 @@ function serviceCard(service) {
         <div class="service-title-row">
 
           <h3>
-            ${escapeHTML(service.name)}
+            ${escapeHTML(
+              service.name
+            )}
           </h3>
 
           <span class="price">
@@ -592,24 +607,33 @@ function serviceCard(service) {
   `;
 }
 
+
 async function loadServices() {
   try {
     const snapshot =
       await getDocs(
-        collection(db, "services")
+        collection(
+          db,
+          "services"
+        )
       );
 
     services =
       snapshot.docs
-        .map(function (item) {
-          return {
-            id: item.id,
-            ...item.data()
-          };
-        })
-        .filter(function (item) {
-          return item.active !== false;
-        });
+        .map((item) => ({
+          id: item.id,
+          ...item.data()
+        }))
+        .filter(
+          (item) =>
+            item.active !== false
+        );
+
+    services.sort(
+      (a, b) =>
+        (b.createdAt?.seconds || 0) -
+        (a.createdAt?.seconds || 0)
+    );
 
   } catch (error) {
     console.error(
@@ -620,29 +644,25 @@ async function loadServices() {
     services = [];
 
     showToast(
-      "تعذر تحميل الخدمات.",
+      "تعذر تحميل الخدمات. تحقق من Firestore.",
       true
     );
   }
 
-  const servicesGrid =
-    $("#servicesGrid");
-
-  const homeServices =
-    $("#homeServices");
-
-  if (servicesGrid) {
-    servicesGrid.innerHTML =
+  if ($("#servicesGrid")) {
+    $("#servicesGrid").innerHTML =
       services.length
-        ? services.map(serviceCard).join("")
+        ? services
+            .map(serviceCard)
+            .join("")
         : emptyState(
             "لا توجد خدمات",
             "سيتم إضافة الخدمات قريبًا."
           );
   }
 
-  if (homeServices) {
-    homeServices.innerHTML =
+  if ($("#homeServices")) {
+    $("#homeServices").innerHTML =
       services
         .slice(0, 3)
         .map(serviceCard)
@@ -661,15 +681,18 @@ async function loadServices() {
 
 function updateCartCount() {
   const count =
-    cart.reduce(function (total, item) {
-      return total + item.qty;
-    }, 0);
+    cart.reduce(
+      (sum, item) =>
+        sum + item.qty,
+      0
+    );
 
   if ($("#cartCount")) {
     $("#cartCount").textContent =
       String(count);
   }
 }
+
 
 function addToCart(serviceId) {
   if (!currentUser) {
@@ -698,18 +721,20 @@ function addToCart(serviceId) {
   }
 
   const service =
-    services.find(function (item) {
-      return item.id === serviceId;
-    });
+    services.find(
+      (item) =>
+        item.id === serviceId
+    );
 
   if (!service) {
     return;
   }
 
   const existing =
-    cart.find(function (item) {
-      return item.id === serviceId;
-    });
+    cart.find(
+      (item) =>
+        item.id === serviceId
+    );
 
   if (existing) {
     existing.qty += 1;
@@ -717,7 +742,9 @@ function addToCart(serviceId) {
     cart.push({
       id: service.id,
       name: service.name,
-      price: Number(service.price || 0),
+      price: Number(
+        service.price || 0
+      ),
       qty: 1
     });
   }
@@ -725,9 +752,10 @@ function addToCart(serviceId) {
   updateCartCount();
 
   showToast(
-    "تمت إضافة الخدمة للسلة."
+    "تمت إضافة الخدمة إلى السلة."
   );
 }
+
 
 function renderCart() {
   const container =
@@ -738,6 +766,7 @@ function renderCart() {
   }
 
   if (!cart.length) {
+
     container.innerHTML =
       emptyState(
         "السلة فارغة",
@@ -750,7 +779,8 @@ function renderCart() {
     }
 
     if ($("#checkoutBtn")) {
-      $("#checkoutBtn").disabled = true;
+      $("#checkoutBtn").disabled =
+        true;
     }
 
     return;
@@ -758,23 +788,28 @@ function renderCart() {
 
   container.innerHTML =
     cart
-      .map(function (item, index) {
-        return `
+      .map(
+        (item, index) => `
           <div class="cart-row">
 
             <div>
 
               <b>
-                ${escapeHTML(item.name)}
+                ${escapeHTML(
+                  item.name
+                )}
               </b>
 
               <small>
-                ${money(item.price)}
+                ${money(
+                  item.price
+                )}
                 ×
                 ${item.qty}
               </small>
 
             </div>
+
 
             <div class="cart-actions">
 
@@ -811,17 +846,18 @@ function renderCart() {
             </div>
 
           </div>
-        `;
-      })
+        `
+      )
       .join("");
 
   const total =
-    cart.reduce(function (sum, item) {
-      return (
+    cart.reduce(
+      (sum, item) =>
         sum +
-        item.price * item.qty
-      );
-    }, 0);
+        item.price *
+          item.qty,
+      0
+    );
 
   if ($("#cartTotal")) {
     $("#cartTotal").textContent =
@@ -829,8 +865,20 @@ function renderCart() {
   }
 
   if ($("#checkoutBtn")) {
-    $("#checkoutBtn").disabled = false;
+    $("#checkoutBtn").disabled =
+      false;
   }
+}
+
+
+function getCartTotal() {
+  return cart.reduce(
+    (sum, item) =>
+      sum +
+      item.price *
+        item.qty,
+    0
+  );
 }
 
 
@@ -854,43 +902,43 @@ function prepareCheckout() {
 
   if ($("#bankName")) {
     $("#bankName").textContent =
-      storeConfig.bankName || "—";
+      storeConfig.bankName ||
+      "—";
   }
 
   if ($("#beneficiary")) {
     $("#beneficiary").textContent =
-      storeConfig.beneficiary || "—";
+      storeConfig.beneficiary ||
+      "—";
   }
 
   if ($("#iban")) {
     $("#iban").textContent =
-      storeConfig.iban || "—";
+      storeConfig.iban ||
+      "—";
   }
 
   if ($("#payAmount")) {
     $("#payAmount").textContent =
       money(
-        cart.reduce(function (
-          sum,
-          item
-        ) {
-          return (
-            sum +
-            item.price *
-              item.qty
-          );
-        }, 0)
+        getCartTotal()
       );
   }
 
-  closeModal("#cartModal");
+  closeModal(
+    "#cartModal"
+  );
 
-  openModal("#checkoutModal");
+  openModal(
+    "#checkoutModal"
+  );
 }
 
+
 async function createOrder() {
+
   if (!currentUser) {
-    openModal("#authModal);
+    openModal("#authModal");
     return;
   }
 
@@ -902,10 +950,11 @@ async function createOrder() {
     return;
   }
 
-  const description =
-    $("#checkoutNote")?.value.trim() || "";
+  const note =
+    $("#checkoutNote")?.value.trim() ||
+    "";
 
-  if (description.length < 5) {
+  if (note.length < 5) {
     showToast(
       "اكتب تفاصيل الطلب.",
       true
@@ -914,15 +963,10 @@ async function createOrder() {
   }
 
   const total =
-    cart.reduce(function (sum, item) {
-      return (
-        sum +
-        item.price *
-          item.qty
-      );
-    }, 0);
+    getCartTotal();
 
   try {
+
     const order =
       await addDoc(
         collection(
@@ -946,22 +990,26 @@ async function createOrder() {
             profile?.phone || "",
 
           items:
-            cart.map(function (item) {
-              return {
+            cart.map(
+              (item) => ({
                 serviceId:
                   item.id,
+
                 name:
                   item.name,
+
                 price:
                   item.price,
+
                 qty:
                   item.qty
-              };
-            }),
+              })
+            ),
 
           total,
 
-          description,
+          description:
+            note,
 
           status:
             "pending",
@@ -977,26 +1025,35 @@ async function createOrder() {
         }
       );
 
+
     const shortId =
       order.id
-        .substring(0, 8)
+        .substring(
+          0,
+          8
+        )
         .toUpperCase();
+
 
     const whatsapp =
       String(
-        storeConfig.whatsapp || ""
+        storeConfig.whatsapp ||
+        ""
       ).replace(
         /\D/g,
         ""
       );
+
 
     if (!whatsapp) {
       showToast(
         "ضع رقم الواتساب في firebase-config.js.",
         true
       );
+
       return;
     }
+
 
     const message =
 `السلام عليكم 👋
@@ -1010,39 +1067,49 @@ async function createOrder() {
 
 سأرسل إيصال التحويل مع هذه الرسالة.`;
 
+
     cart = [];
 
     updateCartCount();
+
 
     if ($("#checkoutNote")) {
       $("#checkoutNote").value = "";
     }
 
+
     closeModal(
       "#checkoutModal"
     );
+
 
     switchView(
       "orders"
     );
 
+
     window.open(
-      `https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`,
+      `https://wa.me/${whatsapp}?text=${encodeURIComponent(
+        message
+      )}`,
       "_blank"
     );
+
 
     showToast(
       `تم إنشاء الطلب #${shortId}`
     );
 
+
   } catch (error) {
+
     console.error(
       "Create Order Error:",
       error
     );
 
     showToast(
-      "تعذر إنشاء الطلب. تحقق من Firestore.",
+      "تعذر إنشاء الطلب. تحقق من Firestore وقواعد الأمان.",
       true
     );
   }
@@ -1054,6 +1121,7 @@ async function createOrder() {
 // ===============================
 
 async function renderOrders() {
+
   const container =
     $("#ordersList");
 
@@ -1075,34 +1143,40 @@ async function renderOrders() {
     `<div class="loading">جاري التحميل...</div>`;
 
   try {
+
     const snapshot =
       await getDocs(
-        collection(db, "orders")
+        collection(
+          db,
+          "orders"
+        )
       );
+
 
     const orders =
       snapshot.docs
-        .map(function (item) {
-          return {
+        .map(
+          (item) => ({
             id: item.id,
             ...item.data()
-          };
-        })
-        .filter(function (order) {
-          return (
+          })
+        )
+        .filter(
+          (order) =>
             order.userId ===
             currentUser.uid
-          );
-        });
+        );
 
-    orders.sort(function (a, b) {
-      return (
+
+    orders.sort(
+      (a, b) =>
         (b.createdAt?.seconds || 0) -
         (a.createdAt?.seconds || 0)
-      );
-    });
+    );
+
 
     if (!orders.length) {
+
       container.innerHTML =
         emptyState(
           "لا توجد طلبات",
@@ -1112,97 +1186,122 @@ async function renderOrders() {
       return;
     }
 
+
     container.innerHTML =
       orders
-        .map(function (order) {
-          const status =
-            statuses[
-              order.status
-            ] ||
-            statuses.pending;
+        .map(
+          (order) => {
 
-          const items =
-            order.items
-              ?.map(function (item) {
-                return escapeHTML(
-                  item.name
-                );
-              })
-              .join("، ") ||
-            "طلب";
+            const status =
+              STATUS[
+                order.status
+              ] ||
+              STATUS.pending;
 
-          return `
-            <article class="order-card-row">
 
-              <div class="order-main">
+            const items =
+              order.items
+                ?.map(
+                  (item) =>
+                    escapeHTML(
+                      item.name
+                    )
+                )
+                .join("، ") ||
+              "طلب";
 
-                <div class="order-id">
-                  #${escapeHTML(
-                    order.id
-                      .substring(
-                        0,
-                        8
-                      )
-                      .toUpperCase()
-                  )}
+
+            return `
+              <article
+                class="order-card-row"
+              >
+
+                <div
+                  class="order-main"
+                >
+
+                  <div
+                    class="order-id"
+                  >
+                    #${escapeHTML(
+                      order.id
+                        .substring(
+                          0,
+                          8
+                        )
+                        .toUpperCase()
+                    )}
+                  </div>
+
+
+                  <h3>
+                    ${items}
+                  </h3>
+
+
+                  <p>
+                    ${escapeHTML(
+                      order.description ||
+                      ""
+                    )}
+                  </p>
+
+
+                  <small>
+                    ${formatDate(
+                      order.createdAt
+                    )}
+                  </small>
+
                 </div>
 
-                <h3>
-                  ${items}
-                </h3>
 
-                <p>
-                  ${escapeHTML(
-                    order.description ||
-                    ""
-                  )}
-                </p>
-
-                <small>
-                  ${formatDate(
-                    order.createdAt
-                  )}
-                </small>
-
-              </div>
-
-              <div class="order-meta">
-
-                <span
-                  class="status-pill ${status.className}"
+                <div
+                  class="order-meta"
                 >
-                  ${status.label}
-                </span>
 
-                <strong>
-                  ${money(
-                    order.total
-                  )}
-                </strong>
+                  <span
+                    class="status-pill ${status.className}"
+                  >
+                    ${status.label}
+                  </span>
 
-                ${
-                  order.adminNote
-                    ? `
-                      <div class="admin-note">
-                        <b>
-                          ملاحظة الإدارة:
-                        </b>
-                        ${escapeHTML(
-                          order.adminNote
-                        )}
-                      </div>
-                    `
-                    : ""
-                }
 
-              </div>
+                  <strong>
+                    ${money(
+                      order.total
+                    )}
+                  </strong>
 
-            </article>
-          `;
-        })
+
+                  ${
+                    order.adminNote
+                      ? `
+                        <div
+                          class="admin-note"
+                        >
+                          <b>
+                            ملاحظة الإدارة:
+                          </b>
+
+                          ${escapeHTML(
+                            order.adminNote
+                          )}
+                        </div>
+                      `
+                      : ""
+                  }
+
+                </div>
+
+              </article>
+            `;
+          }
+        )
         .join("");
 
   } catch (error) {
+
     console.error(
       "Render Orders Error:",
       error
@@ -1218,10 +1317,11 @@ async function renderOrders() {
 
 
 // ===============================
-// Default services
+// Admin default services
 // ===============================
 
 async function seedServices() {
+
   if (
     profile?.role !==
     "admin"
@@ -1257,6 +1357,7 @@ async function seedServices() {
         "📚"
     },
 
+
     {
       name:
         "إنشاء مشاريع للمعلمين",
@@ -1270,6 +1371,7 @@ async function seedServices() {
       icon:
         "🧩"
     },
+
 
     {
       name:
@@ -1285,12 +1387,13 @@ async function seedServices() {
         "📝"
     },
 
+
     {
       name:
         "خدمة طلابية إضافية",
 
       description:
-        "خدمة إضافية قابلة للتعديل من لوحة الإدارة.",
+        "خدمة قابلة للتعديل من لوحة الإدارة.",
 
       price:
         10,
@@ -1298,6 +1401,7 @@ async function seedServices() {
       icon:
         "✨"
     },
+
 
     {
       name:
@@ -1312,6 +1416,7 @@ async function seedServices() {
       icon:
         "🎯"
     },
+
 
     {
       name:
@@ -1329,9 +1434,11 @@ async function seedServices() {
 
   ];
 
+
   for (
     const service of defaults
   ) {
+
     await addDoc(
       collection(
         db,
@@ -1353,187 +1460,34 @@ async function seedServices() {
 // Admin
 // ===============================
 
-async function renderAdmin() {
-  if (
-    profile?.role !==
-    "admin"
-  ) {
-    showToast(
-      "ليس لديك صلاحية الإدارة.",
-      true
-    );
-    return;
-  }
-
-  try {
-    await seedServices();
-
-    await loadServices();
-
-    const snapshot =
-      await getDocs(
-        collection(
-          db,
-          "orders"
-        )
-      );
-
-    const orders =
-      snapshot.docs.map(
-        function (item) {
-          return {
-            id: item.id,
-            ...item.data()
-          };
-        }
-      );
-
-    orders.sort(
-      function (a, b) {
-        return (
-          (b.createdAt?.seconds || 0) -
-          (a.createdAt?.seconds || 0)
-        );
-      }
-    );
-
-    if ($("#statAll")) {
-      $("#statAll").textContent =
-        orders.length;
-    }
-
-    if ($("#statPending")) {
-      $("#statPending").textContent =
-        orders.filter(
-          function (item) {
-            return (
-              item.status ===
-              "pending"
-            );
-          }
-        ).length;
-    }
-
-    if ($("#statProgress")) {
-      $("#statProgress").textContent =
-        orders.filter(
-          function (item) {
-            return (
-              item.status ===
-              "progress"
-            );
-          }
-        ).length;
-    }
-
-    if ($("#statCompleted")) {
-      $("#statCompleted").textContent =
-        orders.filter(
-          function (item) {
-            return (
-              item.status ===
-              "completed"
-            );
-          }
-        ).length;
-    }
-
-    if ($("#adminOrders")) {
-      $("#adminOrders").innerHTML =
-        orders.length
-          ? orders
-              .map(
-                adminOrderCard
-              )
-              .join("")
-          : emptyState(
-              "لا توجد طلبات",
-              "ستظهر طلبات الطلاب هنا."
-            );
-    }
-
-    if ($("#adminServices")) {
-      $("#adminServices").innerHTML =
-        services
-          .map(function (service) {
-            return `
-              <div class="service-admin-row">
-
-                <span>
-                  ${escapeHTML(
-                    service.icon ||
-                    "📚"
-                  )}
-                </span>
-
-                <div>
-
-                  <b>
-                    ${escapeHTML(
-                      service.name
-                    )}
-                  </b>
-
-                  <small>
-                    ${money(
-                      service.price
-                    )}
-                  </small>
-
-                </div>
-
-                <button
-                  type="button"
-                  class="icon-btn delete-service"
-                  data-id="${service.id}"
-                >
-                  حذف
-                </button>
-
-              </div>
-            `;
-          })
-          .join("");
-    }
-
-  } catch (error) {
-    console.error(
-      "Admin Error:",
-      error
-    );
-
-    showToast(
-      "تعذر تحميل لوحة الإدارة.",
-      true
-    );
-  }
-}
-
 function adminOrderCard(order) {
+
   const status =
-    statuses[
+    STATUS[
       order.status
     ] ||
-    statuses.pending;
+    STATUS.pending;
 
   const items =
     order.items
-      ?.map(function (item) {
-        return (
-          escapeHTML(
+      ?.map(
+        (item) =>
+          `${escapeHTML(
             item.name
-          ) +
-          " × " +
-          item.qty
-        );
-      })
+          )} × ${item.qty}`
+      )
       .join("، ") ||
     "طلب";
 
-  return `
-    <article class="admin-order">
 
-      <div class="admin-order-head">
+  return `
+    <article
+      class="admin-order"
+    >
+
+      <div
+        class="admin-order-head"
+      >
 
         <div>
 
@@ -1555,6 +1509,7 @@ function adminOrderCard(order) {
           </span>
 
         </div>
+
 
         <strong>
           ${money(
@@ -1578,7 +1533,9 @@ function adminOrderCard(order) {
       </p>
 
 
-      <div class="admin-customer">
+      <div
+        class="admin-customer"
+      >
 
         <span>
           الطالب:
@@ -1615,37 +1572,40 @@ function adminOrderCard(order) {
       </div>
 
 
-      <div class="admin-actions">
+      <div
+        class="admin-actions"
+      >
 
         <select
           class="status-select"
           data-order="${order.id}"
         >
 
-          ${Object.keys(
-            statuses
-          )
-            .map(
-              function (key) {
-                return `
-                  <option
-                    value="${key}"
-                    ${
-                      order.status ===
-                      key
-                        ? "selected"
-                        : ""
-                    }
-                  >
-                    ${
-                      statuses[key]
-                        .label
-                    }
-                  </option>
-                `;
-              }
+          ${
+            Object.keys(
+              STATUS
             )
-            .join("")}
+              .map(
+                (key) =>
+                  `
+                    <option
+                      value="${key}"
+                      ${
+                        order.status ===
+                        key
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      ${
+                        STATUS[key]
+                          .label
+                      }
+                    </option>
+                  `
+              )
+              .join("")
+          }
 
         </select>
 
@@ -1675,11 +1635,177 @@ function adminOrderCard(order) {
 }
 
 
+async function renderAdmin() {
+
+  if (
+    profile?.role !==
+    "admin"
+  ) {
+    showToast(
+      "ليس لديك صلاحية الإدارة.",
+      true
+    );
+
+    return;
+  }
+
+
+  try {
+
+    await seedServices();
+
+    await loadServices();
+
+
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "orders"
+        )
+      );
+
+
+    const orders =
+      snapshot.docs.map(
+        (item) => ({
+          id: item.id,
+          ...item.data()
+        })
+      );
+
+
+    orders.sort(
+      (a, b) =>
+        (b.createdAt?.seconds || 0) -
+        (a.createdAt?.seconds || 0)
+    );
+
+
+    if ($("#statAll")) {
+      $("#statAll").textContent =
+        orders.length;
+    }
+
+
+    if ($("#statPending")) {
+      $("#statPending").textContent =
+        orders.filter(
+          (order) =>
+            order.status ===
+            "pending"
+        ).length;
+    }
+
+
+    if ($("#statProgress")) {
+      $("#statProgress").textContent =
+        orders.filter(
+          (order) =>
+            order.status ===
+            "progress"
+        ).length;
+    }
+
+
+    if ($("#statCompleted")) {
+      $("#statCompleted").textContent =
+        orders.filter(
+          (order) =>
+            order.status ===
+            "completed"
+        ).length;
+    }
+
+
+    if ($("#adminOrders")) {
+      $("#adminOrders").innerHTML =
+        orders.length
+          ? orders
+              .map(
+                adminOrderCard
+              )
+              .join("")
+          : emptyState(
+              "لا توجد طلبات",
+              "ستظهر طلبات الطلاب هنا."
+            );
+    }
+
+
+    if ($("#adminServices")) {
+
+      $("#adminServices").innerHTML =
+        services
+          .map(
+            (service) =>
+              `
+                <div
+                  class="service-admin-row"
+                >
+
+                  <span>
+                    ${escapeHTML(
+                      service.icon ||
+                      "📚"
+                    )}
+                  </span>
+
+
+                  <div>
+
+                    <b>
+                      ${escapeHTML(
+                        service.name
+                      )}
+                    </b>
+
+                    <small>
+                      ${money(
+                        service.price
+                      )}
+                    </small>
+
+                  </div>
+
+
+                  <button
+                    type="button"
+                    class="icon-btn delete-service"
+                    data-id="${service.id}"
+                  >
+                    حذف
+                  </button>
+
+                </div>
+              `
+          )
+          .join("");
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Admin Error:",
+      error
+    );
+
+    showToast(
+      "تعذر تحميل لوحة الإدارة.",
+      true
+    );
+  }
+}
+
+
 // ===============================
 // Admin actions
 // ===============================
 
-async function updateAdminOrder(orderId) {
+async function updateAdminOrder(
+  orderId
+) {
+
   if (
     profile?.role !==
     "admin"
@@ -1687,21 +1813,26 @@ async function updateAdminOrder(orderId) {
     return;
   }
 
+
   const select =
     document.querySelector(
       `.status-select[data-order="${orderId}"]`
     );
+
 
   const note =
     document.querySelector(
       `[data-order-note="${orderId}"]`
     );
 
+
   if (!select) {
     return;
   }
 
+
   try {
+
     await updateDoc(
       doc(
         db,
@@ -1721,15 +1852,18 @@ async function updateAdminOrder(orderId) {
       }
     );
 
+
     showToast(
       "تم تحديث الطلب."
     );
 
+
     await renderAdmin();
 
   } catch (error) {
+
     console.error(
-      "Update Admin Order Error:",
+      "Update Order Error:",
       error
     );
 
@@ -1740,8 +1874,11 @@ async function updateAdminOrder(orderId) {
   }
 }
 
+
 async function addService(event) {
+
   event.preventDefault();
+
 
   if (
     profile?.role !==
@@ -1750,10 +1887,12 @@ async function addService(event) {
     return;
   }
 
+
   const form =
     new FormData(
       event.target
     );
+
 
   const name =
     String(
@@ -1761,17 +1900,21 @@ async function addService(event) {
       ""
     ).trim();
 
+
   const description =
     String(
       form.get(
         "description"
-      ) || ""
+      ) ||
+      ""
     ).trim();
+
 
   const price =
     Number(
       form.get("price")
     );
+
 
   const icon =
     String(
@@ -1779,28 +1922,26 @@ async function addService(event) {
       "📚"
     ).trim();
 
-  if (!name) {
-    showToast(
-      "اكتب اسم الخدمة.",
-      true
-    );
-    return;
-  }
 
   if (
+    !name ||
     !Number.isFinite(
       price
     ) ||
     price < 0
   ) {
+
     showToast(
-      "اكتب سعرًا صحيحًا.",
+      "أدخل اسمًا وسعرًا صحيحين.",
       true
     );
+
     return;
   }
 
+
   try {
+
     await addDoc(
       collection(
         db,
@@ -1810,7 +1951,8 @@ async function addService(event) {
         name,
         description,
         price,
-        icon,
+        icon:
+          icon || "📚",
         active:
           true,
         createdAt:
@@ -1818,15 +1960,19 @@ async function addService(event) {
       }
     );
 
+
     event.target.reset();
+
 
     showToast(
       "تمت إضافة الخدمة."
     );
 
+
     await renderAdmin();
 
   } catch (error) {
+
     console.error(
       "Add Service Error:",
       error
@@ -1839,13 +1985,18 @@ async function addService(event) {
   }
 }
 
-async function deleteService(serviceId) {
+
+async function deleteService(
+  serviceId
+) {
+
   if (
     profile?.role !==
     "admin"
   ) {
     return;
   }
+
 
   if (
     !confirm(
@@ -1855,7 +2006,9 @@ async function deleteService(serviceId) {
     return;
   }
 
+
   try {
+
     await deleteDoc(
       doc(
         db,
@@ -1864,13 +2017,16 @@ async function deleteService(serviceId) {
       )
     );
 
+
     showToast(
       "تم حذف الخدمة."
     );
 
+
     await renderAdmin();
 
   } catch (error) {
+
     console.error(
       "Delete Service Error:",
       error
@@ -1885,24 +2041,27 @@ async function deleteService(serviceId) {
 
 
 // ===============================
-// Clicks
+// Global click handling
 // ===============================
 
 document.addEventListener(
   "click",
-  function (event) {
+  (event) => {
 
     const viewButton =
       event.target.closest(
         "[data-view]"
       );
 
+
     if (viewButton) {
 
       event.preventDefault();
 
+
       const view =
         viewButton.dataset.view;
+
 
       if (
         [
@@ -1912,7 +2071,10 @@ document.addEventListener(
         ].includes(view) &&
         !currentUser
       ) {
-        openModal("#authModal");
+
+        openModal(
+          "#authModal"
+        );
 
         showToast(
           "سجل الدخول أولًا.",
@@ -1921,6 +2083,7 @@ document.addEventListener(
 
         return;
       }
+
 
       switchView(view);
 
@@ -1932,6 +2095,7 @@ document.addEventListener(
       event.target.closest(
         ".add-cart"
       );
+
 
     if (addButton) {
 
@@ -1948,49 +2112,60 @@ document.addEventListener(
         "[data-close]"
       );
 
+
     if (closeButton) {
 
       closeModal(
-        `#${closeButton.dataset.close}`
+        "#" +
+        closeButton.dataset.close
       );
 
       return;
     }
 
 
-    const quantityButton =
+    const qtyButton =
       event.target.closest(
         ".qty"
       );
 
-    if (quantityButton) {
+
+    if (qtyButton) {
 
       const index =
         Number(
-          quantityButton.dataset.i
+          qtyButton.dataset.i
         );
+
 
       const difference =
         Number(
-          quantityButton.dataset.d
+          qtyButton.dataset.d
         );
 
-      if (!cart[index]) {
+
+      if (
+        !cart[index]
+      ) {
         return;
       }
 
+
       cart[index].qty +=
         difference;
+
 
       if (
         cart[index].qty <=
         0
       ) {
+
         cart.splice(
           index,
           1
         );
       }
+
 
       renderCart();
 
@@ -2005,6 +2180,7 @@ document.addEventListener(
         ".remove"
       );
 
+
     if (removeButton) {
 
       const index =
@@ -2012,10 +2188,12 @@ document.addEventListener(
           removeButton.dataset.i
         );
 
+
       cart.splice(
         index,
         1
       );
+
 
       renderCart();
 
@@ -2029,6 +2207,7 @@ document.addEventListener(
       event.target.closest(
         ".save-order"
       );
+
 
     if (saveButton) {
 
@@ -2045,13 +2224,12 @@ document.addEventListener(
         ".delete-service"
       );
 
+
     if (deleteButton) {
 
       deleteService(
         deleteButton.dataset.id
       );
-
-      return;
     }
 
   }
@@ -2065,22 +2243,24 @@ document.addEventListener(
 $("#openAuthBtn")
   ?.addEventListener(
     "click",
-    function () {
+    () => {
       openModal(
         "#authModal"
       );
     }
   );
 
+
 $("#heroLoginBtn")
   ?.addEventListener(
     "click",
-    function () {
+    () => {
       openModal(
         "#authModal"
       );
     }
   );
+
 
 $("#googleLoginBtn")
   ?.addEventListener(
@@ -2088,10 +2268,11 @@ $("#googleLoginBtn")
     loginWithGoogle
   );
 
+
 $("#logoutBtn")
   ?.addEventListener(
     "click",
-    async function () {
+    async () => {
 
       try {
 
@@ -2099,9 +2280,11 @@ $("#logoutBtn")
           auth
         );
 
-        currentUser = null;
+        currentUser =
+          null;
 
-        profile = null;
+        profile =
+          null;
 
         cart = [];
 
@@ -2117,7 +2300,9 @@ $("#logoutBtn")
 
       } catch (error) {
 
-        console.error(error);
+        console.error(
+          error
+        );
 
         showToast(
           "تعذر تسجيل الخروج.",
@@ -2129,10 +2314,11 @@ $("#logoutBtn")
     }
   );
 
+
 $("#cartBtn")
   ?.addEventListener(
     "click",
-    function () {
+    () => {
 
       renderCart();
 
@@ -2143,11 +2329,13 @@ $("#cartBtn")
     }
   );
 
+
 $("#checkoutBtn")
   ?.addEventListener(
     "click",
     prepareCheckout
   );
+
 
 $("#createOrderBtn")
   ?.addEventListener(
@@ -2155,11 +2343,13 @@ $("#createOrderBtn")
     createOrder
   );
 
+
 $("#profileForm")
   ?.addEventListener(
     "submit",
     saveProfile
   );
+
 
 $("#serviceForm")
   ?.addEventListener(
@@ -2167,61 +2357,36 @@ $("#serviceForm")
     addService
   );
 
+
 $("#refreshAdminBtn")
   ?.addEventListener(
     "click",
     renderAdmin
   );
 
-$("#iban")
-  ?.addEventListener(
-    "click",
-    function () {
-
-      if (
-        storeConfig.iban
-      ) {
-
-        navigator.clipboard
-          ?.writeText(
-            storeConfig.iban
-          )
-          .then(
-            function () {
-              showToast(
-                "تم نسخ الآيبان."
-              );
-            }
-          )
-          .catch(
-            function () {}
-          );
-
-      }
-
-    }
-  );
-
 
 // ===============================
-// Firebase Auth State
+// Firebase auth state
 // ===============================
 
 onAuthStateChanged(
   auth,
-  async function (user) {
+  async (user) => {
 
     currentUser =
       user || null;
 
+
     if (!user) {
 
-      profile = null;
+      profile =
+        null;
 
       updateNavigation();
 
       return;
     }
+
 
     try {
 
@@ -2259,11 +2424,13 @@ onAuthStateChanged(
 
 document.addEventListener(
   "DOMContentLoaded",
-  async function () {
+  async () => {
 
     if ($("#year")) {
       $("#year").textContent =
-        new Date().getFullYear();
+        String(
+          new Date().getFullYear()
+        );
     }
 
     await loadServices();
