@@ -1,0 +1,1062 @@
+```html
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <meta
+    name="description"
+    content="خدمات طلاب جابر بن حيان - منصة خدمات طلابية"
+  />
+
+  <meta
+    name="theme-color"
+    content="#111827"
+  />
+
+  <title>خدمات طلاب جابر بن حيان</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<!-- =========================
+     Toast
+========================= -->
+
+<div id="toast" class="toast"></div>
+
+
+<!-- =========================
+     Header
+========================= -->
+
+<header class="topbar">
+
+  <div class="container nav-wrap">
+
+    <a
+      href="#home"
+      class="brand"
+      data-view="home"
+    >
+      خدمات طلاب
+      <span>جابر بن حيان</span>
+    </a>
+
+
+    <nav
+      id="mainNav"
+      class="nav-links hidden"
+    >
+
+      <a
+        href="#home"
+        data-view="home"
+      >
+        الرئيسية
+      </a>
+
+      <a
+        href="#services"
+        data-view="services"
+      >
+        الخدمات
+      </a>
+
+      <a
+        href="#orders"
+        data-view="orders"
+      >
+        طلباتي
+      </a>
+
+      <a
+        href="#profile"
+        data-view="profile"
+      >
+        ملفي
+      </a>
+
+      <a
+        id="adminNav"
+        href="#admin"
+        data-view="admin"
+        class="hidden"
+      >
+        الإدارة
+      </a>
+
+    </nav>
+
+
+    <div class="nav-actions">
+
+      <button
+        id="cartBtn"
+        class="cart-btn hidden"
+        type="button"
+      >
+        السلة
+        <span id="cartCount">0</span>
+      </button>
+
+
+      <span
+        id="welcomeUser"
+        class="welcome hidden"
+      ></span>
+
+
+      <button
+        id="logoutBtn"
+        class="btn btn-ghost hidden"
+        type="button"
+      >
+        خروج
+      </button>
+
+
+      <button
+        id="openAuthBtn"
+        class="btn btn-primary"
+        type="button"
+      >
+        تسجيل الدخول
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =========================
+     Main
+========================= -->
+
+<main>
+
+
+<!-- =========================
+     Home
+========================= -->
+
+<section
+  id="view-home"
+  class="view active"
+>
+
+  <div class="container hero">
+
+
+    <!-- Hero Text -->
+
+    <div class="hero-copy">
+
+      <div class="eyebrow">
+        منصة خدمات طلابية
+      </div>
+
+      <h1>
+        خدمات طلاب
+        <br>
+        <span>
+          جابر بن حيان
+        </span>
+      </h1>
+
+      <p>
+        منصة خدمات طلابية منظمة تساعدك في طلب
+        البحوث والمشاريع والاختبارات التدريبية
+        وغيرها، مع حساب خاص لكل طالب.
+      </p>
+
+
+      <div class="hero-actions">
+
+        <button
+          class="btn btn-primary btn-lg"
+          data-view="services"
+          type="button"
+        >
+          استعرض الخدمات
+        </button>
+
+        <button
+          class="btn btn-secondary btn-lg"
+          id="heroLoginBtn"
+          type="button"
+        >
+          تسجيل الدخول
+        </button>
+
+      </div>
+
+
+      <div class="trust-row">
+
+        <div>
+          <strong>6</strong>
+          <span>خدمات</span>
+        </div>
+
+        <div>
+          <strong>24/7</strong>
+          <span>استقبال الطلبات</span>
+        </div>
+
+        <div>
+          <strong>خاص</strong>
+          <span>ملف لكل طالب</span>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         Hero Image
+    ========================= -->
+
+    <div class="hero-image-card">
+
+      <div class="hero-image-wrapper">
+
+        <img
+          src="images/hero.jpg"
+          alt="خدمات طلاب جابر بن حيان"
+          class="hero-image"
+          onerror="this.style.display='none'; document.getElementById('heroImagePlaceholder').style.display='flex';"
+        >
+
+        <div
+          id="heroImagePlaceholder"
+          class="hero-image-placeholder"
+          style="display:none;"
+        >
+          <div>
+            <div class="placeholder-icon">
+              📚
+            </div>
+
+            <h3>
+              ضع صورتك هنا
+            </h3>
+
+            <p>
+              اسم الصورة:
+              <b>hero.jpg</b>
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =========================
+       Featured Services
+  ========================= -->
+
+  <div
+    class="container section-block"
+  >
+
+    <div class="section-head">
+
+      <div>
+
+        <div class="eyebrow">
+          الخدمات
+        </div>
+
+        <h2>
+          ابدأ بالخدمة التي تحتاجها
+        </h2>
+
+      </div>
+
+      <button
+        class="link-btn"
+        data-view="services"
+        type="button"
+      >
+        عرض الكل ←
+      </button>
+
+    </div>
+
+
+    <div
+      id="homeServices"
+      class="service-grid"
+    ></div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================
+     Services
+========================= -->
+
+<section
+  id="view-services"
+  class="view"
+>
+
+  <div class="container page-head">
+
+    <div>
+
+      <div class="eyebrow">
+        الخدمات
+      </div>
+
+      <h1>
+        خدمات طلاب جابر بن حيان
+      </h1>
+
+      <p>
+        اختر الخدمة التي تحتاجها ثم أضفها إلى السلة.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="container">
+
+    <div
+      id="servicesGrid"
+      class="service-grid service-grid-lg"
+    ></div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================
+     Orders
+========================= -->
+
+<section
+  id="view-orders"
+  class="view"
+>
+
+  <div class="container page-head">
+
+    <div>
+
+      <div class="eyebrow">
+        حسابك
+      </div>
+
+      <h1>
+        طلباتي
+      </h1>
+
+      <p>
+        تابع طلباتك وحالاتها وملاحظات الإدارة.
+      </p>
+
+    </div>
+
+
+    <button
+      class="btn btn-primary"
+      data-view="services"
+      type="button"
+    >
+      طلب جديد
+    </button>
+
+  </div>
+
+
+  <div class="container">
+
+    <div
+      id="ordersList"
+      class="orders-list"
+    ></div>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================
+     Profile
+========================= -->
+
+<section
+  id="view-profile"
+  class="view"
+>
+
+  <div class="container page-head">
+
+    <div>
+
+      <div class="eyebrow">
+        حساب الطالب
+      </div>
+
+      <h1>
+        ملفي الشخصي
+      </h1>
+
+      <p>
+        بياناتك الأساسية المستخدمة في الطلبات.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <div class="container profile-wrap">
+
+
+    <div class="profile-card">
+
+      <div
+        class="avatar"
+        id="profileAvatar"
+      >
+        ط
+      </div>
+
+      <div>
+
+        <h2 id="profileName">
+          —
+        </h2>
+
+        <p id="profileEmail">
+          —
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <form
+      id="profileForm"
+      class="panel form-grid"
+    >
+
+      <label>
+        الاسم الكامل
+
+        <input
+          id="profileNameInput"
+          required
+          maxlength="80"
+        >
+
+      </label>
+
+
+      <label>
+        الشعبة
+
+        <input
+          id="profileClassInput"
+          required
+          maxlength="30"
+          placeholder="مثال: 3/2"
+        >
+
+      </label>
+
+
+      <label>
+        رقم التواصل
+        <span class="optional">
+          اختياري
+        </span>
+
+        <input
+          id="profilePhoneInput"
+          maxlength="20"
+          placeholder="05xxxxxxxx"
+        >
+
+      </label>
+
+
+      <button
+        class="btn btn-primary"
+        type="submit"
+      >
+        حفظ البيانات
+      </button>
+
+    </form>
+
+  </div>
+
+</section>
+
+
+
+<!-- =========================
+     Admin
+========================= -->
+
+<section
+  id="view-admin"
+  class="view"
+>
+
+  <div class="container page-head">
+
+    <div>
+
+      <div class="eyebrow">
+        لوحة الإدارة
+      </div>
+
+      <h1>
+        إدارة خدمات طلاب جابر بن حيان
+      </h1>
+
+      <p>
+        إدارة الخدمات والطلبات والطلاب.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- Statistics -->
+
+  <div class="container admin-stats">
+
+    <div class="stat-card">
+
+      <span>
+        كل الطلبات
+      </span>
+
+      <strong id="statAll">
+        0
+      </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <span>
+        بانتظار التحويل
+      </span>
+
+      <strong id="statPending">
+        0
+      </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <span>
+        قيد التنفيذ
+      </span>
+
+      <strong id="statProgress">
+        0
+      </strong>
+
+    </div>
+
+
+    <div class="stat-card">
+
+      <span>
+        مكتملة
+      </span>
+
+      <strong id="statCompleted">
+        0
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <!-- Admin Layout -->
+
+  <div class="container admin-layout">
+
+
+    <!-- Orders -->
+
+    <div class="panel">
+
+      <div class="panel-head">
+
+        <h2>
+          الطلبات
+        </h2>
+
+        <button
+          class="link-btn"
+          id="refreshAdminBtn"
+          type="button"
+        >
+          تحديث
+        </button>
+
+      </div>
+
+
+      <div id="adminOrders"></div>
+
+    </div>
+
+
+    <!-- Services -->
+
+    <div class="panel">
+
+      <div class="panel-head">
+
+        <h2>
+          إضافة خدمة
+        </h2>
+
+      </div>
+
+
+      <form
+        id="serviceForm"
+        class="form-grid"
+      >
+
+        <label>
+          اسم الخدمة
+
+          <input
+            name="name"
+            required
+            maxlength="100"
+          >
+
+        </label>
+
+
+        <label>
+          الوصف
+
+          <textarea
+            name="description"
+            required
+            maxlength="400"
+          ></textarea>
+
+        </label>
+
+
+        <label>
+          السعر (ريال)
+
+          <input
+            name="price"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+          >
+
+        </label>
+
+
+        <label>
+          الأيقونة
+
+          <input
+            name="icon"
+            maxlength="4"
+            placeholder="📚"
+          >
+
+        </label>
+
+
+        <button
+          class="btn btn-primary"
+          type="submit"
+        >
+          إضافة الخدمة
+        </button>
+
+      </form>
+
+
+      <div
+        class="panel-head service-admin-head"
+      >
+
+        <h2>
+          الخدمات الحالية
+        </h2>
+
+      </div>
+
+
+      <div
+        id="adminServices"
+      ></div>
+
+    </div>
+
+  </div>
+
+</section>
+
+</main>
+
+
+
+<!-- =========================
+     Footer
+========================= -->
+
+<footer class="footer">
+
+  <div class="container footer-inner">
+
+    <span>
+      ©
+      <span id="year"></span>
+      خدمات طلاب جابر بن حيان
+    </span>
+
+    <span>
+      منصة طلابية
+    </span>
+
+  </div>
+
+</footer>
+
+
+
+<!-- =========================
+     Google Login Modal
+========================= -->
+
+<div
+  id="authModal"
+  class="modal hidden"
+>
+
+  <div
+    class="modal-backdrop"
+    data-close="authModal"
+  ></div>
+
+
+  <div class="modal-card">
+
+    <button
+      class="modal-close"
+      data-close="authModal"
+      type="button"
+    >
+      ×
+    </button>
+
+
+    <div class="eyebrow">
+      الحساب
+    </div>
+
+
+    <h2>
+      تسجيل الدخول
+    </h2>
+
+
+    <p>
+      استخدم حساب Google الخاص بك للدخول إلى المنصة.
+    </p>
+
+
+    <div class="google-login-box">
+
+      <button
+        id="googleLoginBtn"
+        class="btn btn-primary btn-google"
+        type="button"
+      >
+
+        <span class="google-icon">
+          G
+        </span>
+
+        تسجيل الدخول باستخدام Google
+
+      </button>
+
+
+      <div class="login-note">
+
+        <span>
+          🔐
+        </span>
+
+        حسابك وطلباتك محفوظة بشكل مستقل.
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     Cart Modal
+========================= -->
+
+<div
+  id="cartModal"
+  class="modal hidden"
+>
+
+  <div
+    class="modal-backdrop"
+    data-close="cartModal"
+  ></div>
+
+
+  <div
+    class="modal-card cart-card"
+  >
+
+    <button
+      class="modal-close"
+      data-close="cartModal"
+      type="button"
+    >
+      ×
+    </button>
+
+
+    <div class="eyebrow">
+      السلة
+    </div>
+
+
+    <h2>
+      طلبك
+    </h2>
+
+
+    <div id="cartItems"></div>
+
+
+    <div class="cart-total">
+
+      <span>
+        الإجمالي
+      </span>
+
+      <strong id="cartTotal">
+        0.00 ر.س
+      </strong>
+
+    </div>
+
+
+    <button
+      id="checkoutBtn"
+      class="btn btn-primary btn-block"
+      type="button"
+    >
+      متابعة الدفع
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     Checkout Modal
+========================= -->
+
+<div
+  id="checkoutModal"
+  class="modal hidden"
+>
+
+  <div
+    class="modal-backdrop"
+    data-close="checkoutModal"
+  ></div>
+
+
+  <div class="modal-card">
+
+    <button
+      class="modal-close"
+      data-close="checkoutModal"
+      type="button"
+    >
+      ×
+    </button>
+
+
+    <div class="eyebrow">
+      إتمام الطلب
+    </div>
+
+
+    <h2>
+      التحويل البنكي
+    </h2>
+
+
+    <div class="bank-box">
+
+
+      <div>
+
+        <span>
+          البنك
+        </span>
+
+        <b id="bankName">
+          —
+        </b>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          المستفيد
+        </span>
+
+        <b id="beneficiary">
+          —
+        </b>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          الآيبان
+        </span>
+
+        <b id="iban">
+          —
+        </b>
+
+      </div>
+
+
+      <div>
+
+        <span>
+          المبلغ
+        </span>
+
+        <b id="payAmount">
+          —
+        </b>
+
+      </div>
+
+    </div>
+
+
+    <div class="notice">
+
+      حوّل المبلغ الموضح أعلاه،
+      ثم أرسل صورة إيصال التحويل عبر واتساب
+      لإكمال الطلب.
+      بعد استلام الإيصال سيتواصل معك المسؤول.
+
+    </div>
+
+
+    <label class="field-label">
+
+      وصف الطلب / ملاحظات
+
+      <textarea
+        id="checkoutNote"
+        rows="4"
+        maxlength="1500"
+        placeholder="اكتب المادة، المطلوب، موعد التسليم وأي تفاصيل..."
+        required
+      ></textarea>
+
+    </label>
+
+
+    <button
+      id="createOrderBtn"
+      class="btn btn-primary btn-block"
+      type="button"
+    >
+      إنشاء الطلب ثم فتح واتساب
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     Firebase / App
+========================= -->
+
+<script
+  type="module"
+  src="app.js"
+></script>
+
+</body>
+</html>
+```
